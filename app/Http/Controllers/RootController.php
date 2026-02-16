@@ -4,28 +4,32 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 
+
 class RootController extends Controller
 {
     public function __invoke()
     {
-        // No autenticado → login
+        // Si no hay sesión → login
         if (!Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
 
-        // Usuario deshabilitado
+        // Seguridad extra (por si acaso)
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Usuario inactivo
         if (!$user->is_active) {
             Auth::logout();
             return redirect()->route('login');
         }
 
-        // Redirección por rol
         return match ($user->role) {
-            'admin'    => redirect()->route('admin.dashboard'),
-            'provider' => redirect()->route('provider.dashboard'),
-            default    => redirect()->view('index'),
+
+            default    => redirect()->route('login'),
         };
     }
 }
